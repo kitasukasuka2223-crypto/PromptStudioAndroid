@@ -1,5 +1,9 @@
 name: Build Prompt Studio APK
 
+concurrency:
+  group: prompt-studio-apk-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   workflow_dispatch:
   push:
