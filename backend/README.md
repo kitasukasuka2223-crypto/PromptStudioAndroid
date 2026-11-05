@@ -1,28 +1,37 @@
-# Backend Prompt Studio — Kling 4.0
+# Backend Prompt Studio — Wan 2.2 (mode gratis)
 
-Backend proxy untuk menghubungkan APK Prompt Studio ke fal.ai. API key fal tidak ditanam di APK.
+Backend proxy untuk menghubungkan APK Prompt Studio ke model Wan 2.2 Image-to-Video melalui Hugging Face Spaces publik.
 
 ## Yang dibutuhkan
-- Akun Cloudflare Workers
-- Akun fal.ai dan API key
-- Dua secret Worker: FAL_KEY dan APP_TOKEN
+- Akun Cloudflare (paket Workers Free cukup untuk proxy sederhana).
+- Akun fal.ai dan API key **tidak diperlukan**.
+- Tidak perlu menambahkan FAL_KEY atau APP_TOKEN.
 
 ## Deploy melalui Cloudflare Dashboard
-1. Masuk ke Cloudflare Dashboard → Workers & Pages → Create → Worker.
-2. Beri nama misalnya prompt-studio-api.
-3. Buka Quick Edit, ganti seluruh kode contoh dengan isi file backend/worker.js dari repository ini.
-4. Buka Settings → Variables and Secrets.
-5. Tambahkan secret FAL_KEY dengan API key fal.ai milikmu.
-6. Tambahkan secret APP_TOKEN dengan kode acak panjang yang kamu buat sendiri. Jangan kirim kode ini ke chat atau commit ke GitHub.
-7. Deploy Worker dan salin URL Worker, misalnya https://prompt-studio-api.<akun>.workers.dev.
-8. Masukkan URL Worker dan nilai APP_TOKEN ke bagian AI Video Generator di APK.
+1. Masuk ke https://dash.cloudflare.com/ lalu buka **Workers & Pages**.
+2. Pilih **Create** → **Worker** → **Deploy**.
+3. Beri nama, misalnya `prompt-studio-wan`.
+4. Pilih **Edit code** / **Quick Edit**.
+5. Ganti seluruh kode contoh dengan isi file `backend/worker.js` dari repository PromptStudioAndroid.
+6. Tekan **Deploy**.
+7. Salin alamat Worker yang berakhiran `.workers.dev`.
+8. Buka APK Prompt Studio → bagian **AI Video Generator · Wan 2.2** → tempel alamat Worker.
 
-## Catatan biaya
-Model default: kling/v4/image-to-video. fal.ai menagih berdasarkan durasi dan resolusi video. Periksa harga terkini di halaman model sebelum generate.
+## Cara menggunakan
+1. Pilih gambar di bagian Animasi dari Gambar.
+2. Buat atau tempel prompt di Prompt hasil.
+3. Tempel URL Worker di AI Video Generator.
+4. Pilih durasi 2,5–4,5 detik dan kualitas proses.
+5. Tekan **GENERATE VIDEO AI**. Tunggu sampai MP4 muncul, lalu tekan **SIMPAN VIDEO AI KE GALERI**.
+
+## Batasan mode gratis
+- Menggunakan GPU publik bersama di Hugging Face ZeroGPU; antrean, cold start, batas penggunaan, atau kegagalan sementara bisa terjadi.
+- Durasi dibatasi maksimal sekitar 4,5 detik untuk mengurangi risiko timeout pada GPU gratis.
+- Ketersediaan Space publik tidak dijamin. Pemilik Space dapat mengubah atau menonaktifkan layanan sewaktu-waktu.
+- Gambar dikirim ke layanan Hugging Face publik untuk diproses. Jangan unggah foto pribadi atau sensitif.
 
 ## Endpoint
-- POST /generate — menerima gambar data URI, prompt, durasi, dan resolusi.
-- GET /status?requestId=... — memeriksa proses.
-- GET /result?requestId=... — mengambil URL MP4 hasil.
+- `GET /health` — memeriksa Worker.
+- `POST /generate` — menerima multipart form berisi `image`, `prompt`, `duration`, dan `steps`; mengalirkan hasil SSE dari Wan 2.2.
 
-Kode akses Worker dikirim melalui header Authorization. API key fal hanya tersimpan sebagai secret di Cloudflare Worker.
+Tidak ada API key AI atau token rahasia yang perlu dimasukkan ke APK.
