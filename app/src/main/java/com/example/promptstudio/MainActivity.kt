@@ -1,6 +1,7 @@
 package com.example.promptstudio
 
 import android.app.Activity
+import android.app.DownloadManager
 import android.content.ContentValues
 import android.os.Build
 import android.provider.MediaStore
@@ -9,6 +10,7 @@ import android.webkit.JavascriptInterface
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -100,6 +102,29 @@ class MainActivity : Activity() {
                     contentResolver.delete(uri, null, null)
                     throw error
                 }
+            } catch (_: Exception) {
+                false
+            }
+        }
+
+        @JavascriptInterface
+        fun downloadMp4(videoUrl: String): Boolean {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return false
+            return try {
+                val uri = Uri.parse(videoUrl)
+                if (uri.scheme != "https") return false
+                val request = DownloadManager.Request(uri)
+                    .setTitle("Prompt Studio AI Video")
+                    .setDescription("Mengunduh video hasil AI")
+                    .setMimeType("video/mp4")
+                    .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                    .setDestinationInExternalPublicDir(
+                        Environment.DIRECTORY_MOVIES,
+                        "Prompt Studio/prompt-studio-ai-${System.currentTimeMillis()}.mp4"
+                    )
+                val manager = this@MainActivity.getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+                manager.enqueue(request)
+                true
             } catch (_: Exception) {
                 false
             }
