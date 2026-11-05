@@ -43,12 +43,12 @@ async function generateAiVideo(){
   const reader=response.body.getReader();const decoder=new TextDecoder();let buffer='',videoUrl='';
   while(true){
    const chunk=await reader.read();if(chunk.done)break;buffer+=decoder.decode(chunk.value,{stream:true});
-   const events=buffer.split(/\\r?\\n\\r?\\n/);buffer=events.pop()||'';
+   const events=buffer.split(/\r?\n\r?\n/);buffer=events.pop()||'';
    for(const raw of events){
     let eventName='message',dataLines=[];
-    for(const line of raw.split(/\\r?\\n/)){if(line.startsWith('event:'))eventName=line.slice(6).trim();else if(line.startsWith('data:'))dataLines.push(line.slice(5).trim())}
+    for(const line of raw.split(/\r?\n/)){if(line.startsWith('event:'))eventName=line.slice(6).trim();else if(line.startsWith('data:'))dataLines.push(line.slice(5).trim())}
     if(!dataLines.length)continue;
-    const dataText=dataLines.join('\\n');
+    const dataText=dataLines.join('\n');
     if(eventName==='error'){let message=dataText;try{const parsed=JSON.parse(dataText);if(typeof parsed==='string')message=parsed}catch(_){}throw new Error(message||'Server Wan mengalami kesalahan.')}
     if(eventName==='complete'){
      let payload;try{payload=JSON.parse(dataText)}catch(_){throw new Error('Format hasil video dari server tidak dikenali.')}
