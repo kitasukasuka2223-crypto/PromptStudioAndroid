@@ -1,6 +1,11 @@
 package com.example.promptstudio
 
 import android.app.Activity
+import android.content.ContentValues
+import android.os.Build
+import android.provider.MediaStore
+import android.util.Base64
+import android.webkit.JavascriptInterface
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -30,6 +35,7 @@ class MainActivity : Activity() {
             mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW
             safeBrowsingEnabled = true
         }
+        web.addJavascriptInterface(ExportBridge(), "AndroidExport")
         web.webChromeClient = object : WebChromeClient() {
             override fun onShowFileChooser(
                 webView: WebView,
@@ -67,6 +73,37 @@ class MainActivity : Activity() {
         }
         setContentView(web)
         web.loadUrl("file:///android_asset/index.html")
+    }
+
+    private inner class ExportBridge {
+        @JavascriptInterface
+        fun saveWebM(base64Data: String): Boolean {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return false
+            return try {
+                val bytes = Base64.decode(base64Data, Base64.DEFAULT)
+                val values = ContentValues().apply {
+                    put(MediaStore.Video.Media.DISPLAY_NAME, "prompt-studio-${System.currentTimeMillis()}.webm")
+                    put(MediaStore.Video.Media.MIME_TYPE, "video/webm")
+                    put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/Prompt Studio")
+                    put(MediaStore.Video.Media.IS_PENDING, 1)
+                }
+                val uri = contentResolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values)
+                    ?: return false
+                try {
+                    contentResolver.openOutputStream(uri)?.use { it.write(bytes) }
+                        ?: throw IllegalStateException("Tidak dapat membuka file tujuan")
+                    values.clear()
+                    values.put(MediaStore.Video.Media.IS_PENDING, 0)
+                    contentResolver.update(uri, values, null, null)
+                    true
+                } catch (error: Exception) {
+                    contentResolver.delete(uri, null, null)
+                    throw error
+                }
+            } catch (_: Exception) {
+                false
+            }
+        }
     }
 
     @Deprecated("Deprecated in Android API; retained for broad device compatibility")
