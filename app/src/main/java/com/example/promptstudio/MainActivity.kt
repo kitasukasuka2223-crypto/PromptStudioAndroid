@@ -22,7 +22,7 @@ class MainActivity : Activity() {
             javaScriptEnabled = true
             domStorageEnabled = true
             allowFileAccess = true
-            allowContentAccess = false
+            allowContentAccess = true // WebView needs the granted URI to read the image selected by the user.
             allowFileAccessFromFileURLs = false
             allowUniversalAccessFromFileURLs = false
             javaScriptCanOpenWindowsAutomatically = false
