@@ -119,9 +119,19 @@ class MainActivity : Activity() {
                 }
                 val items = ArrayList<EditedMediaItem>()
                 for (i in 0 until uriArray.length()) {
-                    val uri = Uri.parse(uriArray.getString(i))
+                    val clip = uriArray.getJSONObject(i)
+                    val uri = Uri.parse(clip.getString("uri"))
                     if (uri.scheme != "content") throw IllegalArgumentException("Sumber video tidak valid.")
-                    items.add(EditedMediaItem.Builder(MediaItem.fromUri(uri)).build())
+                    val startMs = clip.optLong("startMs", 0L).coerceAtLeast(0L)
+                    val endMs = clip.optLong("endMs", 0L).coerceAtLeast(0L)
+                    val mediaBuilder = MediaItem.Builder().setUri(uri)
+                    if (startMs > 0L || endMs > 0L) {
+                        val clipping = MediaItem.ClippingConfiguration.Builder()
+                            .setStartPositionMs(startMs)
+                        if (endMs > startMs) clipping.setEndPositionMs(endMs)
+                        mediaBuilder.setClippingConfiguration(clipping.build())
+                    }
+                    items.add(EditedMediaItem.Builder(mediaBuilder.build()).build())
                 }
                 val sequence = EditedMediaItemSequence.withAudioAndVideoFrom(items)
                 val composition = Composition.Builder(sequence).build()
