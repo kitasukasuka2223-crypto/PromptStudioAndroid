@@ -122,6 +122,7 @@ class MainActivity : Activity() {
                 val uriArray = request.getJSONArray("clips")
                 val resolution = request.optInt("resolution", 0).coerceIn(0, 2160)
                 val bitrate = request.optInt("bitrate", 0).coerceIn(0, 50000000)
+                val framing = request.optString("framing", "original")
                 if (uriArray.length() == 0 || uriArray.length() > 10) {
                     callJs("window.onNativeVideoError('Pilih antara 1 sampai 10 video.');")
                     return false
@@ -154,11 +155,30 @@ class MainActivity : Activity() {
                         val sourceWidth = dimensions.first
                         val sourceHeight = dimensions.second
                         if (sourceWidth > 0 && sourceHeight > 0) {
-                            val scale = resolution.toFloat() / minOf(sourceWidth, sourceHeight)
-                            val outputWidth = (sourceWidth * scale).roundToInt().let { if (it % 2 == 0) it else it + 1 }
-                            val outputHeight = (sourceHeight * scale).roundToInt().let { if (it % 2 == 0) it else it + 1 }
+                            val shortSide = if (resolution > 0) resolution else minOf(sourceWidth, sourceHeight)
+                            val targetRatio = when (framing) {
+                                "portrait" -> 9f / 16f
+                                "square" -> 1f
+                                "landscape" -> 16f / 9f
+                                else -> sourceWidth.toFloat() / sourceHeight.toFloat()
+                            }
+                            val outputWidth: Int
+                            val outputHeight: Int
+                            if (framing == "original") {
+                                val scale = shortSide.toFloat() / minOf(sourceWidth, sourceHeight)
+                                outputWidth = (sourceWidth * scale).roundToInt().let { if (it % 2 == 0) it else it + 1 }
+                                outputHeight = (sourceHeight * scale).roundToInt().let { if (it % 2 == 0) it else it + 1 }
+                            } else if (targetRatio < 1f) {
+                                outputWidth = shortSide
+                                outputHeight = (shortSide / targetRatio).roundToInt().let { if (it % 2 == 0) it else it + 1 }
+                            } else {
+                                outputHeight = shortSide
+                                outputWidth = (shortSide * targetRatio).roundToInt().let { if (it % 2 == 0) it else it + 1 }
+                            }
+                            val layout = if (framing == "original") Presentation.LAYOUT_SCALE_TO_FIT
+                                else Presentation.LAYOUT_SCALE_TO_FIT_WITH_CROP
                             editedBuilder.setEffects(Effects(emptyList(), listOf(
-                                Presentation.createForWidthAndHeight(outputWidth, outputHeight, Presentation.LAYOUT_SCALE_TO_FIT)
+                                Presentation.createForWidthAndHeight(outputWidth, outputHeight, layout)
                             )))
                         }
                     }
