@@ -33,5 +33,14 @@ Backend proxy untuk menghubungkan APK Prompt Studio ke model Wan 2.2 Image-to-Vi
 ## Endpoint
 - `GET /health` — memeriksa Worker.
 - `POST /generate` — menerima multipart form berisi `image`, `prompt`, `duration`, dan `steps`; mengalirkan hasil SSE dari Wan 2.2.
+- `POST /interpolate` — menerima multipart form berisi `video`, `multiplier` (`2`, `4`, `8`), dan `fps` (`30`, `60`, `native`); mengalirkan hasil SSE dari RIFE.
+
+## AI Frame Interpolation (RIFE)
+1. Perbarui kode Cloudflare Worker dengan versi terbaru dari `backend/worker.js` di repository.
+2. Di APK, isi alamat Worker yang sama pada kolom backend AI Video Generator.
+3. Buka bagian **AI Frame Interpolation · RIFE**, pilih video, mulai dari pengganda 2× dan 60 FPS.
+4. Tunggu antrean GPU selesai, periksa hasil, lalu simpan ke galeri.
+
+Layanan RIFE publik tidak dijamin selalu tersedia. Video maksimal 90 MB pada endpoint uji coba. Gerakan cepat, blur, occlusion, dan scene cut dapat menghasilkan artefak; periksa hasil sebelum mengunggah ke microstock.
 
 Tidak ada API key AI atau token rahasia yang perlu dimasukkan ke APK.
