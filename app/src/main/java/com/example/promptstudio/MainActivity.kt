@@ -66,12 +66,14 @@ class MainActivity : Activity() {
             ): Boolean {
                 uploadCallback?.onReceiveValue(null)
                 uploadCallback = filePathCallback
+                val acceptedType = fileChooserParams.acceptTypes.firstOrNull { it.contains("/") } ?: "*/*"
                 val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
                     addCategory(Intent.CATEGORY_OPENABLE)
-                    type = "image/*"
+                    type = acceptedType
                 }
                 return try {
-                    startActivityForResult(Intent.createChooser(intent, "Pilih gambar"), imagePickerRequest)
+                    val chooserTitle = if (acceptedType.startsWith("video/")) "Pilih video" else "Pilih gambar"
+                    startActivityForResult(Intent.createChooser(intent, chooserTitle), imagePickerRequest)
                     true
                 } catch (_: Exception) {
                     uploadCallback?.onReceiveValue(null)
