@@ -18,6 +18,7 @@ import android.webkit.WebViewClient
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.Presentation
+import androidx.media3.effect.FrameDropEffect
 import androidx.media3.transformer.Effects
 import androidx.media3.transformer.Composition
 import androidx.media3.transformer.DefaultEncoderFactory
@@ -123,6 +124,7 @@ class MainActivity : Activity() {
                 val resolution = request.optInt("resolution", 0).coerceIn(0, 2160)
                 val bitrate = request.optInt("bitrate", 0).coerceIn(0, 50000000)
                 val framing = request.optString("framing", "original")
+                val targetFps = request.optInt("fps", 0).coerceIn(0, 60)
                 if (uriArray.length() == 0 || uriArray.length() > 10) {
                     callJs("window.onNativeVideoError('Pilih antara 1 sampai 10 video.');")
                     return false
@@ -142,6 +144,10 @@ class MainActivity : Activity() {
                         mediaBuilder.setClippingConfiguration(clipping.build())
                     }
                     val editedBuilder = EditedMediaItem.Builder(mediaBuilder.build())
+                    val videoEffects = mutableListOf<androidx.media3.common.Effect>()
+                    if (targetFps > 0) {
+                        videoEffects.add(FrameDropEffect.createDefaultFrameDropEffect(targetFps.toFloat()))
+                    }
                     if (resolution > 0) {
                         val retriever = MediaMetadataRetriever()
                         val dimensions = try {
@@ -177,10 +183,11 @@ class MainActivity : Activity() {
                             }
                             val layout = if (framing == "original") Presentation.LAYOUT_SCALE_TO_FIT
                                 else Presentation.LAYOUT_SCALE_TO_FIT_WITH_CROP
-                            editedBuilder.setEffects(Effects(emptyList(), listOf(
-                                Presentation.createForWidthAndHeight(outputWidth, outputHeight, layout)
-                            )))
+                            videoEffects.add(Presentation.createForWidthAndHeight(outputWidth, outputHeight, layout))
                         }
+                    }
+                    if (videoEffects.isNotEmpty()) {
+                        editedBuilder.setEffects(Effects(emptyList(), videoEffects))
                     }
                     items.add(editedBuilder.build())
                 }
