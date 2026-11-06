@@ -3,6 +3,7 @@ package com.example.promptstudio
 import android.app.Activity
 import android.content.ContentValues
 import android.content.Intent
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -26,6 +27,7 @@ import androidx.media3.transformer.ExportResult
 import androidx.media3.transformer.Transformer
 import org.json.JSONArray
 import java.io.File
+import kotlin.math.roundToInt
 import java.io.FileInputStream
 
 class MainActivity : Activity() {
@@ -117,7 +119,7 @@ class MainActivity : Activity() {
                 val request = org.json.JSONObject(urisJson)
                 val uriArray = request.getJSONArray("clips")
                 val resolution = request.optInt("resolution", 0).coerceIn(0, 2160)
-                                if (uriArray.length() == 0 || uriArray.length() > 10) {
+                if (uriArray.length() == 0 || uriArray.length() > 10) {
                     callJs("window.onNativeVideoError('Pilih antara 1 sampai 10 video.');")
                     return false
                 }
@@ -137,7 +139,25 @@ class MainActivity : Activity() {
                     }
                     val editedBuilder = EditedMediaItem.Builder(mediaBuilder.build())
                     if (resolution > 0) {
-                        editedBuilder.setEffects(Effects(emptyList(), listOf(Presentation.createForShortSide(resolution))))
+                        val retriever = MediaMetadataRetriever()
+                        val dimensions = try {
+                            retriever.setDataSource(this@MainActivity, uri)
+                            val sourceWidth = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toIntOrNull() ?: 0
+                            val sourceHeight = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull() ?: 0
+                            Pair(sourceWidth, sourceHeight)
+                        } finally {
+                            retriever.release()
+                        }
+                        val sourceWidth = dimensions.first
+                        val sourceHeight = dimensions.second
+                        if (sourceWidth > 0 && sourceHeight > 0) {
+                            val scale = resolution.toFloat() / minOf(sourceWidth, sourceHeight)
+                            val outputWidth = (sourceWidth * scale).roundToInt().let { if (it % 2 == 0) it else it + 1 }
+                            val outputHeight = (sourceHeight * scale).roundToInt().let { if (it % 2 == 0) it else it + 1 }
+                            editedBuilder.setEffects(Effects(emptyList(), listOf(
+                                Presentation.createForWidthAndHeight(outputWidth, outputHeight, Presentation.LAYOUT_SCALE_TO_FIT)
+                            )))
+                        }
                     }
                     items.add(editedBuilder.build())
                 }
