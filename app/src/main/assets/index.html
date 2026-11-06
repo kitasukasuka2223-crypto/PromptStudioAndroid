@@ -18,6 +18,21 @@
 <div class="grid"><button class="btn secondary" onclick="clearEditorVideos()">BERSIHKAN KLIP</button><button class="btn yellow" onclick="exportEditorVideos()">GABUNGKAN & EKSPOR MP4</button></div>
 <p class="status" id="editorStatus">Pilih 1–10 video, atur resolusi, lalu ekspor MP4.</p>
 </div>
+<div class="card" id="frameInterpolation">
+<div class="heading">AI FRAME INTERPOLATION · RIFE</div>
+<p class="hint">Buat frame perantara dengan AI agar gerakan video tampak lebih halus. Pemrosesan online memakai GPU publik; hasil dan antrean bergantung pada ketersediaan server.</p>
+<label>Pilih video dari perangkat</label>
+<input id="interpolationFile" type="file" accept="video/*">
+<div class="grid">
+<div><label>Pengganda frame</label><select id="interpolationMultiplier"><option value="2" selected>2× · disarankan</option><option value="4">4× · lebih berat</option><option value="8">8× · sangat berat</option></select></div>
+<div><label>FPS output</label><select id="interpolationFps"><option value="30">30 FPS</option><option value="60" selected>60 FPS</option><option value="native">Native · semua frame</option></select></div>
+</div>
+<button class="btn yellow" id="interpolateBtn" onclick="interpolateVideo()">HALUSKAN GERAKAN VIDEO</button>
+<p class="status" id="interpolationStatus">Pilih video, lalu jalankan AI Frame Interpolation.</p>
+<video id="interpolationResult" controls playsinline class="hide" style="width:100%;border-radius:12px;margin-top:10px"></video>
+<button class="btn secondary hide" id="saveInterpolationBtn" onclick="saveInterpolatedVideo()">SIMPAN HASIL KE GALERI</button>
+<p class="hint">Catatan: RIFE menyisipkan frame baru, tetapi gerakan yang rusak parah, blur, atau perubahan adegan mendadak tetap bisa menimbulkan artefak. Mulai dengan 2× untuk menjaga kualitas.</p>
+</div>
 <section id="auto"><div class="card"><div class="heading">Ide / Konsep Animasi</div><textarea id="idea" placeholder="Contoh: Daun musim gugur tertiup angin perlahan di taman..."></textarea><div class="grid"><div><label>Gerakan objek</label><select id="objectMotion"><option value="gentle natural movement">Gerakan alami dan halus</option><option value="slow wind-driven movement with subtle variation">Tertiup angin perlahan</option><option value="soft floating movement with gentle rotation">Mengambang lembut</option><option value="flowing movement with realistic physics">Mengalir realistis</option><option value="subtle water ripples and droplets">Riak dan tetesan air</option></select></div><div><label>Gerakan kamera</label><select id="cameraMotion"><option value="locked-off static camera, no camera movement">Kamera diam (disarankan)</option><option value="very slow cinematic push-in">Zoom masuk sinematik</option><option value="very slow cinematic pull-out">Zoom keluar sinematik</option><option value="subtle smooth horizontal camera pan">Geser horizontal perlahan</option><option value="subtle smooth vertical camera tilt">Tilt vertikal perlahan</option></select></div><div><label>Gaya hasil</label><select id="visualStyle"><option value="photorealistic, natural and cinematic">Realistis sinematik</option><option value="soft, elegant and calming">Lembut dan menenangkan</option><option value="premium commercial stock footage">Premium stock commercial</option><option value="dreamy atmospheric visual">Dreamy atmosferik</option></select></div><div><label>Kecepatan</label><select id="motionSpeed"><option value="slow and graceful">Lambat dan anggun</option><option value="very subtle and minimal">Sangat halus / minimal</option><option value="moderate and natural">Sedang dan alami</option></select></div></div><p class="hint">Tulis adegan, objek, dan detail gerakan. Pilihan di atas akan dimasukkan otomatis ke prompt.</p><button class="btn" onclick="makePrompt()">BUAT PROMPT</button><p class="status" id="aiStatus">Generator prompt lokal aktif. AI cloud akan ditambahkan melalui backend aman.</p></div><div class="card"><div class="heading">Prompt Reader · Tempel Prompt</div><p class="hint">Tempel prompt dari Flow AI atau sumber lain di sini. Kamu bisa menyimpannya ke kolom prompt untuk diedit, disalin, atau dipakai kembali.</p><textarea id="promptReader" placeholder="Tempel prompt yang ingin dibaca atau digunakan di sini..."></textarea><div class="grid"><button class="btn secondary" onclick="loadReaderPrompt()">GUNAKAN PROMPT INI</button><button class="btn secondary" onclick="clearReaderPrompt()">BERSIHKAN</button></div></div><div class="card"><div class="heading">Prompt hasil</div><textarea id="prompt" placeholder="Prompt hasil generator atau prompt dari Prompt Reader akan muncul di sini..."></textarea><div class="grid"><button class="btn secondary" onclick="copy('prompt')">SALIN PROMPT</button><button class="btn secondary" onclick="sendPromptToReader()">SALIN KE READER</button></div></div><div class="card"><div class="heading">Inspirasi cepat</div><div class="chips"><button class="chip" onclick="idea('Daun kering berputar tertiup angin di latar putih')">Daun tertiup angin</button><button class="chip" onclick="idea('Awan bergerak perlahan di langit biru')">Awan bergerak</button><button class="chip" onclick="idea('Tetesan air jatuh dan membuat riak di permukaan air')">Riak air</button></div></div></section>
 <section id="manual" class="hide"><div class="card"><div class="heading">Editor HTML / JavaScript</div><textarea id="code" style="min-height:180px;font-family:monospace" placeholder="Tempel kode HTML animasi di sini"></textarea><button class="btn" onclick="previewCode()">JALANKAN PREVIEW</button><p class="hint">Eksekusi kode manual penuh akan diaktifkan pada tahap editor berikutnya.</p></div></section>
 <div class="card"><div class="heading">Animasi dari Gambar</div><p class="hint">Pilih foto dari perangkat, lalu buat gerakan kamera sederhana dan ekspor sebagai WebM.</p><input id="imageFile" type="file" accept="image/*"><div class="grid"><div><label>Gerakan</label><select id="motion"><option value="zoom">Zoom perlahan</option><option value="drift">Geser perlahan</option><option value="float">Mengambang lembut</option></select></div><div><label>Kekuatan gerakan</label><select id="motionStrength"><option value="low">Halus</option><option value="medium" selected>Sedang</option><option value="high">Kuat</option></select></div></div><button class="btn secondary" onclick="clearImage()">HAPUS GAMBAR</button><p class="status" id="imageStatus">Belum ada gambar dipilih.</p></div><div class="card"><div class="heading">AI VIDEO GENERATOR · WAN 2.2</div><p class="hint">Ubah foto menjadi video AI sungguhan menggunakan Wan 2.2. Mode uji coba memakai GPU publik gratis; antrean dan waktu proses dapat berubah-ubah.</p><label>Alamat backend Cloudflare Worker</label><input id="workerUrl" type="url" placeholder="https://nama-worker.nama-akun.workers.dev"><div class="grid"><div><label>Durasi video</label><select id="aiDuration"><option value="2.5">2,5 detik</option><option value="3.5" selected>3,5 detik · disarankan</option><option value="4.5">4,5 detik · maksimum</option></select></div><div><label>Kualitas proses</label><select id="aiSteps"><option value="4">Cepat</option><option value="6" selected>Seimbang</option><option value="8">Lebih detail</option></select></div></div><button class="btn yellow" id="aiGenerateBtn" onclick="generateAiVideo()">GENERATE VIDEO AI</button><p class="status" id="aiVideoStatus">Backend belum dihubungkan. Hubungkan Worker gratis terlebih dahulu.</p><video id="aiVideoResult" controls playsinline class="hide" style="width:100%;border-radius:12px;margin-top:10px"></video><button class="btn secondary hide" id="saveAiVideoBtn" onclick="saveAiVideo()">SIMPAN VIDEO AI KE GALERI</button></div><div class="card"><div class="heading">Background</div><div class="chips"><button class="chip" onclick="setBg('#00ff00')">Green</button><button class="chip" onclick="setBg('transparent')">Alpha*</button><button class="chip" onclick="setBg('#000000')">Black</button><button class="chip" onclick="setBg('#0000ff')">Blue</button><button class="chip" onclick="setBg('#ffffff')">White</button></div><p class="hint">*Alpha hanya preview; ekspor video standar tidak menyimpan transparansi.</p></div>
@@ -50,6 +65,63 @@ function exportEditorVideos(){if(!editorVideoUris.length){editorStatus('Tambahka
 window.onNativeExportStarted=function(){editorStatus('Sedang menggabungkan klip dan membuat MP4. Jangan tutup aplikasi sampai selesai...')};
 window.onNativeExportFinished=function(ok,message){editorStatus(message|| (ok?'Ekspor selesai.':'Ekspor gagal.'))};
 
+function interpolationStatus(message){document.getElementById('interpolationStatus').textContent=message}
+async function interpolateVideo(){
+ let endpoint=document.getElementById('workerUrl').value.trim();
+ while(endpoint.endsWith('/'))endpoint=endpoint.slice(0,-1);
+ const file=document.getElementById('interpolationFile').files[0];
+ if(!endpoint){alert('Masukkan alamat Cloudflare Worker pada bagian AI Video Generator terlebih dahulu.');return}
+ if(!file){alert('Pilih video terlebih dahulu.');return}
+ if(!file.type.startsWith('video/')){alert('File yang dipilih bukan video.');return}
+ if(file.size>90*1024*1024){alert('Ukuran video maksimal 90 MB.');return}
+ const button=document.getElementById('interpolateBtn');
+ const result=document.getElementById('interpolationResult');
+ button.disabled=true;result.classList.add('hide');document.getElementById('saveInterpolationBtn').classList.add('hide');
+ try{
+  interpolationStatus('Mengunggah video ke server RIFE...');
+  const form=new FormData();
+  form.append('video',file,file.name||'input.mp4');
+  form.append('multiplier',document.getElementById('interpolationMultiplier').value);
+  form.append('fps',document.getElementById('interpolationFps').value);
+  const response=await fetch(endpoint+'/interpolate',{method:'POST',body:form});
+  if(!response.ok||!response.body){let message='Permintaan interpolasi gagal';try{const e=await response.clone().json();message=e.error||message}catch(_){}throw new Error(message)}
+  interpolationStatus('RIFE sedang membuat frame perantara. Tunggu antrean GPU selesai...');
+  const reader=response.body.getReader();const decoder=new TextDecoder();let buffer='',videoUrl='';
+  while(true){
+   const chunk=await reader.read();if(chunk.done)break;
+   buffer+=decoder.decode(chunk.value,{stream:true});
+   const events=buffer.split(/\r?\n\r?\n/);buffer=events.pop()||'';
+   for(const raw of events){
+    let eventName='message',dataLines=[];
+    for(const line of raw.split(/\r?\n/)){if(line.startsWith('event:'))eventName=line.slice(6).trim();else if(line.startsWith('data:'))dataLines.push(line.slice(5).trim())}
+    if(!dataLines.length)continue;
+    const dataText=dataLines.join('\n');
+    if(eventName==='error')throw new Error(dataText||'Server RIFE mengalami kesalahan.');
+    if(eventName==='complete'){
+     let payload;try{payload=JSON.parse(dataText)}catch(_){throw new Error('Format hasil RIFE tidak dikenali.')}
+     const fileResult=Array.isArray(payload)?payload[0]:payload;
+     if(fileResult&&typeof fileResult==='object'&&fileResult.url)videoUrl=fileResult.url;
+     else if(fileResult&&typeof fileResult==='object'&&fileResult.path)videoUrl='https://1inkusface-rife.hf.space/gradio_api/file='+fileResult.path;
+     else if(typeof fileResult==='string')videoUrl='https://1inkusface-rife.hf.space/gradio_api/file='+fileResult;
+     if(!videoUrl)throw new Error('RIFE selesai tetapi tautan video tidak ditemukan.');
+     break;
+    }
+    if(eventName==='generating'||eventName==='heartbeat'||eventName==='estimation')interpolationStatus('RIFE sedang memproses video di GPU. Mohon tunggu...');
+   }
+   if(videoUrl)break;
+  }
+  if(!videoUrl)throw new Error('Koneksi berakhir sebelum hasil selesai. Server publik mungkin sibuk; coba lagi nanti.');
+  result.src=videoUrl;result.classList.remove('hide');document.getElementById('saveInterpolationBtn').classList.remove('hide');result.load();
+  interpolationStatus('Selesai! Putar hasilnya dan periksa gerakan sebelum digunakan.');
+ }catch(error){interpolationStatus('Gagal: '+error.message);alert('AI Frame Interpolation gagal: '+error.message)}
+ finally{button.disabled=false}
+}
+function saveInterpolatedVideo(){
+ const video=document.getElementById('interpolationResult');
+ if(!video.src){alert('Belum ada hasil interpolasi.');return}
+ try{const ok=AndroidExport.downloadMp4(video.src);interpolationStatus(ok?'Download dimulai. Periksa notifikasi dan folder Movies/Prompt Studio.':'Tidak dapat memulai download.')}
+ catch(_){interpolationStatus('Fitur simpan belum tersedia di versi aplikasi ini.')}
+}
 function aiVideoStatus(m){document.getElementById('aiVideoStatus').textContent=m}
 function saveAiVideo(){const v=document.getElementById('aiVideoResult');if(!v.src){alert('Belum ada video AI.');return}try{const ok=AndroidExport.downloadMp4(v.src);aiVideoStatus(ok?'Download dimulai. Periksa notifikasi dan folder Movies/Prompt Studio.':'Tidak dapat memulai download. Periksa dukungan perangkat.')}catch(e){aiVideoStatus('Fitur simpan belum tersedia di versi aplikasi ini.')}}
 async function generateAiVideo(){
