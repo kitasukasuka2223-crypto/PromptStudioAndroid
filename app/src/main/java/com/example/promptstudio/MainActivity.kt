@@ -133,7 +133,7 @@ class MainActivity : Activity() {
                     }
                     items.add(EditedMediaItem.Builder(mediaBuilder.build()).build())
                 }
-                val sequence = EditedMediaItemSequence.withAudioAndVideoFrom(items)
+                val sequence = EditedMediaItemSequence(items)
                 val composition = Composition.Builder(sequence).build()
                 val output = File(cacheDir, "prompt-studio-" + System.currentTimeMillis() + ".mp4")
                 callJs("window.onNativeExportStarted();")
