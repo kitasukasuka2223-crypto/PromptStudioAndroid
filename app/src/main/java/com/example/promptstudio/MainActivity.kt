@@ -20,6 +20,8 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.Presentation
 import androidx.media3.transformer.Effects
 import androidx.media3.transformer.Composition
+import androidx.media3.transformer.DefaultEncoderFactory
+import androidx.media3.transformer.VideoEncoderSettings
 import androidx.media3.transformer.EditedMediaItem
 import androidx.media3.transformer.EditedMediaItemSequence
 import androidx.media3.transformer.ExportException
@@ -119,6 +121,7 @@ class MainActivity : Activity() {
                 val request = org.json.JSONObject(urisJson)
                 val uriArray = request.getJSONArray("clips")
                 val resolution = request.optInt("resolution", 0).coerceIn(0, 2160)
+                val bitrate = request.optInt("bitrate", 0).coerceIn(0, 50000000)
                 if (uriArray.length() == 0 || uriArray.length() > 10) {
                     callJs("window.onNativeVideoError('Pilih antara 1 sampai 10 video.');")
                     return false
@@ -167,7 +170,14 @@ class MainActivity : Activity() {
                 callJs("window.onNativeExportStarted();")
                 runOnUiThread {
                     try {
+                        val encoderSettings = VideoEncoderSettings.Builder().apply {
+                            if (bitrate > 0) setBitrate(bitrate)
+                        }.build()
+                        val encoderFactory = DefaultEncoderFactory.Builder(this@MainActivity)
+                            .setRequestedVideoEncoderSettings(encoderSettings)
+                            .build()
                         transformer = Transformer.Builder(this@MainActivity)
+                            .setEncoderFactory(encoderFactory)
                             .addListener(object : Transformer.Listener {
                                 override fun onCompleted(composition: Composition, exportResult: ExportResult) {
                                     val saved = saveMp4ToGallery(output)
