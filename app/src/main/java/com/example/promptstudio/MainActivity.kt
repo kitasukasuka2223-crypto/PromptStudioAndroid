@@ -16,6 +16,8 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.effect.Presentation
+import androidx.media3.transformer.Effects
 import androidx.media3.transformer.Composition
 import androidx.media3.transformer.EditedMediaItem
 import androidx.media3.transformer.EditedMediaItemSequence
@@ -112,7 +114,10 @@ class MainActivity : Activity() {
                 return false
             }
             return try {
-                val uriArray = JSONArray(urisJson)
+                val request = org.json.JSONObject(urisJson)
+                val uriArray = request.getJSONArray("clips")
+                val resolution = request.optInt("resolution", 0).coerceIn(0, 2160)
+                val fit = request.optString("fit", "fit")
                 if (uriArray.length() == 0 || uriArray.length() > 10) {
                     callJs("window.onNativeVideoError('Pilih antara 1 sampai 10 video.');")
                     return false
@@ -131,7 +136,12 @@ class MainActivity : Activity() {
                         if (endMs > startMs) clipping.setEndPositionMs(endMs)
                         mediaBuilder.setClippingConfiguration(clipping.build())
                     }
-                    items.add(EditedMediaItem.Builder(mediaBuilder.build()).build())
+                    val editedBuilder = EditedMediaItem.Builder(mediaBuilder.build())
+                    if (resolution > 0) {
+                        val layout = if (fit == "crop") Presentation.LAYOUT_SCALE_TO_FIT_WITH_CROP else Presentation.LAYOUT_SCALE_TO_FIT
+                        editedBuilder.setEffects(Effects(emptyList(), listOf(Presentation.createForShortSide(resolution))))
+                    }
+                    items.add(editedBuilder.build())
                 }
                 val sequence = EditedMediaItemSequence(items)
                 val composition = Composition.Builder(sequence).build()
